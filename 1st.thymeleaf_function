@@ -110,17 +110,128 @@
 - checked=false <input type="checkbox" name="active" checked="false" /><br/>  -->> 무조건 체크되어있어서 th를 만들었다.
 
 9. 반복
-  -. 
+  -. thymeleaf 반복문
+  <tr th:each="user : ${users}">
+    <td th:text="${user.username}">username</td>
+    <td th:text="${user.age}">0</td>
+  </tr>
+
+  -. 반복문 상태를 보여줄수있다.
+  <tr th:each="user, userStat : ${users}">
+    <td th:text="${userStat.count}">username</td>
+    <td th:text="${user.username}">username</td>
+    <td th:text="${user.age}">0</td>
+    <td>
+      index = <span th:text="${userStat.index}"></span>
+      count = <span th:text="${userStat.count}"></span>
+      size = <span th:text="${userStat.size}"></span>
+      even? = <span th:text="${userStat.even}"></span>
+      odd? = <span th:text="${userStat.odd}"></span>
+      first? = <span th:text="${userStat.first}"></span>
+      last? = <span th:text="${userStat.last}"></span>
+      current = <span th:text="${userStat.current}"></span>
+    </td>
+  </tr>
+
 
 10. 조건부 평가
+  -. if unless 에서 만약 만족하지 못한다면 아예 태그전체다 표출되지 않는다.
+  <tr th:each="user, userStat : ${users}">
+        <td th:text="${userStat.count}">1</td>
+        <td th:text="${user.username}">username</td>
+        <td>
+            <span th:text="${user.age}">0</span>
+            <span th:text="'미성년자'" th:if="${user.age lt 20}"></span>
+            <span th:text="'미성년자'" th:unless="${user.age ge 20}"></span>
+        </td>
+    </tr>
+
+    <tr th:each="user, userStat : ${users}">
+        <td th:text="${userStat.count}">1</td>
+        <td th:text="${user.username}">username</td>
+        <td th:switch="${user.age}">
+            <span th:case="10">10살</span>
+            <span th:case="20">20살</span>
+            <span th:case="*">기타</span>
+        </td>
+    </tr>
 
 11. 주석
+  -. HTML 주석 <!-- -->
+    -. 렌더링하지 않고 주석이 그냥 그대로 표출됨
+
+  -. thymeleaf 파서 주석 <!--/*  [[${data}]]  */-->   or  <!--/*-->    <!--*/--> 
+    -. 랜더링시 아예 다 지워져서 나온다. (아예 안보임)
+
+-. thymeleaf 프로토타입 주석  <!--/*/  <span th:text="${data}">html data</span>  /*/-->
+    -. thymeleaf에서 렌더링할떄만 주석말고 표출해주고 그외에는 주석으로 나온다.
 
 12. 블록
+  -. <th:block> 는 thymeleaf고유의 태그이다. >> div에 each를 사용하는데 만약에 그 상단에 사용하고 싶을 경우에 사용하고, 렌더링되면 안보여진다.
+
+  <th:block th:each="user : ${users}">
+    <div>
+        사용자 이름1 <span th:text="${user.username}"></span>
+        사용자 나이1 <span th:text="${user.age}"></span>
+    </div>
+    <div>
+        요약 <span th:text="${user.username} + ' / ' + ${user.age}"></span>
+    </div>
+</th:block>
 
 13. 자바스크립트 인라인
+    <!-- 자바스크립트 인라인 사용 전 -->
+    <script>
+        var username = [[${user.username}]];
+        var age = [[${user.age}]];
+    
+        //자바스크립트 내추럴 템플릿
+        var username2 = /*[[${user.username}]]*/ "test username";
+    
+        //객체
+        var user = [[${user}]];
+    </script>
+    
+    <!-- 자바스크립트 인라인 사용 후 -->  문제없이 잘 사용할수 있도록 해준다.
+    <script th:inline="javascript">
+        var username = [[${user.username}]];
+        var age = [[${user.age}]];
+    
+        //자바스크립트 내추럴 템플릿
+        var username2 = /*[[${user.username}]]*/ "test username";
+    
+        //객체
+        var user = [[${user}]];
+    </script>
 
 14. 템플릿조각
+  -.  insert vs replace 
+    -. insert replace 사용 (insert는 div까지 유지되어서 들어오고, replace는 아예 대체되어 footer만 생긴다.)
+      <footer th:fragment="copy">
+          푸터 자리 입니다.
+      </footer>
+
+    -. 파라미터를 사용할 수 있다.
+      <footer th:fragment="copyParam (param1, param2)">
+          <p>파라미터 자리 입니다.</p>
+          <p th:text="${param1}"></p>
+          <p th:text="${param2}"></p>
+      </footer>
+
+<div th:insert="~{template/fragment/footer :: copy}"></div>
+
+<h2>부분 포함 replace</h2>
+<div th:replace="~{template/fragment/footer :: copy}"></div>
+
+<h2>부분 포함 단순 표현식</h2>
+<div th:replace="template/fragment/footer :: copy"></div>
+
+<h1>파라미터 사용</h1>
+<div th:replace="~{template/fragment/footer :: copyParam ('데이터1', '데이터2')}"></div>
+
+
+
+
 
 15. 템플릿 레이아웃1
 
