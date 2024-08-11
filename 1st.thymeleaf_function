@@ -229,12 +229,20 @@
 <h1>파라미터 사용</h1>
 <div th:replace="~{template/fragment/footer :: copyParam ('데이터1', '데이터2')}"></div>
 
-
-
-
-
 15. 템플릿 레이아웃1
+  -. 
+<head th:replace="template/layout/base :: common_header(~{::title},~{::link})">
+    <title>메인 타이틀</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/themes/smoothness/jquery-ui.css}">
+</head>
 
-16. 템플릿 레이아웃2
-
-17. 정리
+<head th:fragment="common_header(title,links)">
+    <title th:replace="${title}">레이아웃 타이틀</title>
+    <!-- 공통 -->
+    <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/awesomeapp.css}">
+    <link rel="shortcut icon" th:href="@{/images/favicon.ico}">
+    <script type="text/javascript" th:src="@{/sh/scripts/codebase.js}"></script>
+    <!-- 추가 -->
+    <th:block th:replace="${links}" />
+</head>
