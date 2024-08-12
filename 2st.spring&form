@@ -1,0 +1,28 @@
+1. check-mulit
+-.  filed와 value 값이 같을경우 자동적으로 checked가 된다.
+    
+    <div>
+        <div>등록 지역</div>
+        <div th:each="region : ${regions}" class="form-check form-check-inline">
+            <input type="checkbox" th:field="${item.regions}" th:value="${region.key}" class="form-check-input" disabled>
+            <label th:for="${#ids.prev('regions')}"
+                   th:text="${region.value}" class="form-check-label">서울</label>
+        </div>
+    </div>
+
+2. 라디오버튼
+  -. th:filed에 값에서 name, id, value값을 자동적으로 생성하게 해주는데, name과 id는 item.regions의 필드값인 regions로 매핑된다. 그리고 
+     반복문을 돌면서 ID에는 필드이름인 regions가 생성되는데 고유의 번호를 가지도록 뒤에 인덱스번호인 1 ~ 숫자를 자동적으로 붙여준다.
+  -. th:filed에서 th:value가 없었다면 item.regions의 value값을 매핑할려고 할 것이다. (key값아님) 만약에 checkbax나 radio에서 th:value값이 있다면, th:filed에 있는 키값과 th:value에 있는 값의 key값이 같을경우
+     checkbax나 radio에 checked를 넣어줘서 체크표시가 되도록 해준다. 
+  -. item.regions는 리스트인데 th:filed값에서 name, id는 filed이름을 찾아서 사용하니 문제가 없다 그치만, value값을 넣을때 문제가 생기는데 th:value값이 있으니 생성이 아닌 incloud(포함되어있는지?)를 할려고 시도하여 실제적으로 키값을 비교에만 사용하여
+     문제 될게 없다.
+  
+    <div>
+        <div>등록 지역</div>
+        <div th:each="region : ${regions}" class="form-check form-check-inline">
+            <input type="checkbox" th:field="${item.regions}" th:value="${region.key}" class="form-check-input" disabled>
+            <label th:for="${#ids.prev('regions')}"
+                   th:text="${region.value}" class="form-check-label">서울</label>
+        </div>
+    </div>
