@@ -56,4 +56,16 @@ public enum ItemType {
 }
 
 
-3. 
+3. 셀렉트 박스
+    -. select에 있는 th:filed에서 온 값과 option에 있는 th:value에 있는 값이 같을경우 그 option행에다가 selected:selected 를 자동적으로 넣어준다. 
+    <select th:field="${item.deliveryCode}" class="form-select" disabled>
+        <option value="">==배송 방식 선택==</option>
+        <option th:each="deliveryCode : ${deliveryCodes}" th:value="${deliveryCode.code}"
+                th:text="${deliveryCode.displayName}">FAST</option>
+    </select>
+
+
+
+
+
+
