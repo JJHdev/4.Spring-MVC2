@@ -1,10 +1,22 @@
 1. 메시지, 국제화
+  -. 메시지는 message.properties에서 글자를 공통컴포넌트로 만들어서 HTML에서 사용가능하게 만드는것
+  -. message.en.properties 를 만들어 언어가 영어로 설정되어있을경우 영어 properties를 사용하게 만드는것 > 대표적으로 방법은 accept-language를 설정해서 할수있다. > 고객이 들어올 경우 언어설정을 쿠키에 녹여서 사용한다.
 
-2. 스프링 메시지 소스 설정
+2. 스프링 메시지 소스 설정 & 스프링 메시지 소스 사용
+  -. 스프링에서 메시지 소스를 스프링 빈으로 등록해야한다.
+  -. 스프링부트에서는 application.properties에서 등록이 가능하다.
+    -. spring.messages.basename=messages (resources폴더 밑에 messages_en.properties, messages_ko.properties, messages.properties 찾는다.)
+    -. 가장 디폴트인 message.properties를 사용하고 다른 요청이 올경우 다른 것으로 실행된다.
+    -. ms.getMessage("hello", null, Locale.ENGLISH) 같이 불러야 messages_en.properties 영어버전을 찾아서 수행한다.
 
-3. 스프링 메시지 소스 사용
+3. 웹 애플리케이션에 메시지 적용하기
+  -. th:text="#{label.item.id}" 과 같이 thyme-leaf에서는 message 기능의 구현을 도와주는 기능이 있다.
+  -. hello.name=안녕 {0}
+  -. th:text="#{hello.name(${item.itemName})}" 과 같이 사용하면 파라미터를 넣어서 사용할수 있다.
 
-4. 웹 애플리케이션에 메시지 적용하기
-
-5. 웹 애플리케이션에 국제화 적용하기
-
+4. 웹 애플리케이션에 국제화 적용하기
+  -. spring.messages.basename=messages 설정이 되어있으면
+  -. message_en.propertie같이만 프로퍼티즈를 하나 만들어주면 브라우저에서 언어설정만 해주면 알아서 영어는 _en을 인식해서 영어프로퍼티즈로 읽어준다.
+  -. ISO규칙에 따른것으로 message_english.properties 같이 해주면 인식할수없다.
+  -. Accept-Language 헤더에 오는 언어 설정에 따라 결정되므로 ISO규칙을 따라야한다.
+  -. application.properties의 규칙에서는 basename_로케일(ISO국가명).properties 으로 인식된다.
