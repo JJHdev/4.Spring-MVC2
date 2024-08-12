@@ -26,3 +26,34 @@
                    th:text="${region.value}" class="form-check-label">서울</label>
         </div>
     </div>
+
+  -. enum 이해하기 
+    -. BOOK라는 상수가 있다. 여기에 ("값")을 넣을수 있었던 이유는 생성자 역할 덕분이다. 
+        ItemType(String description) {
+            this.description = description;
+        }
+      이 생성자 덕분에 값을 넣을 수 있는건데 상수를 생성할때 생성자를 요청하고 BOOK이라는 상수에 description에 필드에 문자열을 넣는다 그렇게 하곤 
+        @ModelAttribute("itemTypes")
+        public ItemType[] itemTypes() {
+            return ItemType.values();
+        }
+      여기에서 리스트형식으로 각 상수를 Map과 같이 생성하는데 키값을 호출할때는 enum의 메소드를 사용하여 itemType.name() 사용하고 값을 호출할때는 생성자에 넣었던 itemType.getDescription()를 사용해서 상수 생성시 넣었던 값을 호출하여 사용할 수 있다.
+
+
+public enum ItemType {
+
+    BOOK("도서"), FOOD("음식"), ETC("기타");
+
+    private final String description;
+
+    ItemType(String description) {
+        this.description = description;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+}
+
+
+3. 
