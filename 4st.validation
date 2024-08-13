@@ -1,15 +1,27 @@
-1. 검증 요구사항
-  -. ㄴ
+1. 검증 직접처리 - 개발
+  -. 컨트롤러에서 map에 데이터를 넣어서 div로 표출
+    -- 컨트롤러 
+        Map<String, String> errors = new HashMap<>();
 
-2. 프로젝트 설정V1
-  -. 
+        //검증 로직
+        if (!StringUtils.hasText(item.getItemName())) {
+            errors.put("itemName", "상품 이름은 필수입니다.");
+        }
 
-3. 검증 직접처리 - 소개
-  -. 
+    -- thymeleaf
+    <div th:if="${errors?.containsKey('globalError')}">
+        <p class="field-error" th:text="${errors['globalError']}">전체 오류 메시지</p>
+    </div>
 
-4. 검증 직접처리 - 개발
-  -. 
-
+    <div>
+        <label for="itemName" th:text="#{label.item.itemName}">상품명</label>
+        <input type="text" id="itemName" th:field="*{itemName}"
+               th:class="${errors?.containsKey('itemName')} ? 'form-control field-error' : 'form-control'"
+               class="form-control" placeholder="이름을 입력하세요">
+        <div class="field-error" th:if="${errors?.containsKey('itemName')}" th:text="${errors['itemName']}">
+            상품명 오류
+        </div>
+    </div>
 5. 프로젝트 준비 V2
   -. 
 
