@@ -1,5 +1,7 @@
 1. 검증 직접처리 - 개발
   -. 컨트롤러에서 map에 데이터를 넣어서 div로 표출
+  -. errors?.containsKey('globalError')  ?. 을 넣은 이유는 뭘까? errors는 맨처음 접근시 (폼호출 errors 객체가 없어 null이 되어 nullpointexception이 발생한다.)
+
     -- 컨트롤러 
         Map<String, String> errors = new HashMap<>();
 
@@ -22,19 +24,36 @@
             상품명 오류
         </div>
     </div>
-5. 프로젝트 준비 V2
+
+2. BindingResult1
+  -. 여기에서 핵심은 BindingResult bindingResult 이 파라미터이다.
+  -. bindingResult.addError(new FieldError("item", "itemName", "상품 이름은 필수 입니다."));
+  -. bindingResult.addError(new ObjectError("item", "가격 * 수량의 합은 10,000원 이상이어야 합니다. 현재 값 = " + resultPrice));
+
+  -. @ModelAttribute Item item, BindingResult bindingResult 에서 bindingResult객체는 @ModelAttribute Item item와 같이 modelAttribute객체 앞에 있어야 앞에 있는 객체를 활용한다.
   -. 
 
-6. BindingResult1
+  public String addItemV1(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
+        if (!StringUtils.hasText(item.getItemName())) {
+            bindingResult.addError(new FieldError("item", "itemName", "상품 이름은 필수 입니다."));
+        }
+
+        //특정 필드가 아닌 복합 룰 검증 (글로벌 에러)
+        if (item.getPrice() != null && item.getQuantity() != null) {
+            int resultPrice = item.getPrice() * item.getQuantity();
+            if (resultPrice < 10000) {
+                bindingResult.addError(new ObjectError("item", "가격 * 수량의 합은 10,000원 이상이어야 합니다. 현재 값 = " + resultPrice));
+            }
+        }
+  }
+
+3. BindingResult2
   -. 
 
-7. BindingResult2
+4. FiledError, ObjectError
   -. 
 
-8. FiledError, ObjectError
-  -. 
-
-9. 오류코드와 메시지 처리1
+5. 오류코드와 메시지 처리1
   -. 
 
 10. 오류코드와 메시지 처리2
