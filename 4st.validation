@@ -30,8 +30,7 @@
   -. bindingResult.addError(new FieldError("item", "itemName", "상품 이름은 필수 입니다."));
   -. bindingResult.addError(new ObjectError("item", "가격 * 수량의 합은 10,000원 이상이어야 합니다. 현재 값 = " + resultPrice));
 
-  -. @ModelAttribute Item item, BindingResult bindingResult 에서 bindingResult객체는 @ModelAttribute Item item와 같이 modelAttribute객체 앞에 있어야 앞에 있는 객체를 활용한다.
-  -. 
+  -. @ModelAttribute Item item, BindingResult bindingResult 에서 bindingResult객체는 @ModelAttribute Item item와 같이 @modelAttribute객체 앞에 있어야 앞에 있는 객체를 활용한다.
 
   public String addItemV1(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
         if (!StringUtils.hasText(item.getItemName())) {
@@ -47,22 +46,115 @@
         }
   }
 
+  -- thyme-leaf
+    -- 글로벌 에러
+    <div th:if="${#fields.hasGlobalErrors()}">
+        <p class="field-error" th:each="err : ${#fields.globalErrors()}" th:text="${err}">글로벌 오류 메시지</p>
+    </div>
+    -- 개별 에러
+    <div class="field-error" th:errors="*{itemName}">
+      상품명 오류
+    </div>
+    -- 에러클래스 >> th:field의 필드명을 참조하여 해당 필드명에 에러가 있는지 thyme-leaf에서 에러를 찾는다.
+    <input type="text" id="itemName" th:field="*{itemName}" th:errorclass="field-error" class="form-control" placeholder="이름을 입력하세요">
+
 3. BindingResult2
+  -. BindingResult bindingResult 에서 사용해서 에러가 발생시 개발자가 넣은 에러가 있고 (실제적으로 업무를 수행하면서 에러가 발생시 자동적으로 에러가 입력된다. 형변환등)
   -. 
 
 4. FiledError, ObjectError
-  -. 
+  -. FiledError에서 item.getQuantity() 을 넣음으로써 에러가 발생해도 클라이언트가 입력된 값이 초기화 되지 않는다.
+
+    if (item.getQuantity() == null || item.getQuantity() >= 9999) {
+      bindingResult.addError(new FieldError("item", "quantity", item.getQuantity(), false, null ,null, "수량은 최대 9,999 까지 허용합니다."));
+    }
+    //특정 필드가 아닌 복합 룰 검증
+    if (item.getPrice() != null && item.getQuantity() != null) {
+        int resultPrice = item.getPrice() * item.getQuantity();
+        if (resultPrice < 10000) {
+            bindingResult.addError(new ObjectError("item",null ,null, "가격 * 수량의 합은 10,000원 이상이어야 합니다. 현재 값 = " + resultPrice));
+        }
+    }
 
 5. 오류코드와 메시지 처리1
-  -. 
+  -. spring.messages.basename=messages,errors 이렇게 추가해줘야 errors.properties를 사용할수 있게된다.
+    if (!StringUtils.hasText(item.getItemName())) {
+        bindingResult.addError(new FieldError("item", "itemName", item.getItemName(), false, new String[]{"required.item.itemName"}, null, null));
+    }
+    if (item.getPrice() == null || item.getPrice() < 1000 || item.getPrice() > 1000000) {
+        bindingResult.addError(new FieldError("item", "price", item.getPrice(), false, new String[]{"range.item.price"}, new Object[]{1000, 1000000}, null));
+    }
+    if (item.getQuantity() == null || item.getQuantity() >= 9999) {
+        bindingResult.addError(new FieldError("item", "quantity", item.getQuantity(), false, new String[]{"max.item.quantity"} ,new Object[]{9999}, null));
+    }
+  -. 위의와 같이 메시지에 있는 문자를 호출하여 사용할수 있다. (new String[]{"range.item.price"})
+  -. 그리고 파라미터를 추가하기 위해서  new Object[]{1000, 1000000} 이런식으로 사용할수 있다.
+  -. 배열로 보낸것은 ,로 구분해서 메시지가 없을경우 그다음 메시지를 표출할수있고 전부다 없을 경우 디폴트 메시지가 표출된다.
 
 10. 오류코드와 메시지 처리2
-  -. 
+  -. rejectValue, reJect를 사용해서 더 간결하게 사용이 가능하다. 
+  -. 메시지는 required 이렇게 넣기만 해도 되는데 여기서 규칙은 객체명.필드이름을 뒤로 자동으로 붙여줘서 자동적으로 호출이 가능한것이다. >> messageCodesErrors에 대해서 알아야하는데 더 자세히는 뒤에서 이어서 하겠음.
+
+       if (!StringUtils.hasText(item.getItemName())) {
+            bindingResult.rejectValue("itemName", "required");
+        }
+        if (item.getPrice() == null || item.getPrice() < 1000 || item.getPrice() > 1000000) {
+            bindingResult.rejectValue("price", "range", new Object[]{1000, 10000000}, null);
+        }
+        if (item.getQuantity() == null || item.getQuantity() >= 9999) {
+            bindingResult.rejectValue("quantity", "max", new Object[]{9999}, null);
+        }
+
+        //특정 필드가 아닌 복합 룰 검증
+        if (item.getPrice() != null && item.getQuantity() != null) {
+            int resultPrice = item.getPrice() * item.getQuantity();
+            if (resultPrice < 10000) {
+                bindingResult.reject("totalPriceMin", new Object[]{10000, resultPrice}, null);
+            }
+        }
 
 11. 오류코드와 메시지 처리3
-  -. 
+  -. 어떻게 오류코드를 설계할까?
+  -. required.item.itemName같이 할수도 있긴 하지만 범용성, 간결성이 좀 부족하다.
+  -. 그래서 메세지는 범용적으로 사용하다가 세밀한 부분은 세밀성있게 사용하는게 좋다.
+      #==ObjectError==
+      #Level1
+      totalPriceMin.item=상품의 가격 * 수량의 합은 {0}원 이상이어야 합니다. 현재 값 = {1}
+      
+      #Level2 - 생략
+      totalPriceMin=전체 가격은 {0}원 이상이어야 합니다. 현재 값 = {1}
+      
+      
+      #==FieldError==
+      #Level1
+      required.item.itemName=상품 이름은 필수입니다.
+      range.item.price=가격은 {0} ~ {1} 까지 허용합니다.
+      max.item.quantity=수량은 최대 {0} 까지 허용합니다.
+      
+      #Level2 - 생략
+      
+      #Level3
+      required.java.lang.String = 필수 문자입니다.
+      required.java.lang.Integer = 필수 숫자입니다.
+      min.java.lang.String = {0} 이상의 문자를 입력해주세요.
+      min.java.lang.Integer = {0} 이상의 숫자를 입력해주세요.
+      range.java.lang.String = {0} ~ {1} 까지의 문자를 입력해주세요.
+      range.java.lang.Integer = {0} ~ {1} 까지의 숫자를 입력해주세요.
+      max.java.lang.String = {0} 까지의 숫자를 허용합니다.
+      max.java.lang.Integer = {0} 까지의 숫자를 허용합니다.
+      
+      #Level4
+      required = 필수 값 입니다.
+      min= {0} 이상이어야 합니다.
+      range= {0} ~ {1} 범위를 허용합니다.
+      max= {0} 까지 허용합니다.
+
+  -. 해당과 같이 단계적으로 설정할수 있다. 
+  -. required.item.itemName  > required.java.lang.String > required 순으로 스프링에서 찾아서 사용하게 하는데 이는 messageCodesResolvers를 이용해서 그런거다.
+  -. messageCodesResolvers의 동작구현은 4번에서 설명하겠음.
 
 12. 오류코드와 메시지 처리4
+
   -. 
 
 13. 오류코드와 메시지 처리5
