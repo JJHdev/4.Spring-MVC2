@@ -14,9 +14,30 @@
     @NotNull(groups = {SaveCheck.class, UpdateCheck.class})
     @Max(value = 9999, groups = {SaveCheck.class})
     private Integer quantity;
-  -. 과 같이 어노테이션으로 유효성 검사를 할수 있다.
+
+
+    @Test
+    void beanValidation() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        Validator validator = factory.getValidator();
+
+        Item item = new Item();
+        item.setItemName(" "); //공백
+        item.setPrice(0);
+        item.setQuantity(10000);
+
+        Set<ConstraintViolation<Item>> violations = validator.validate(item);
+        for (ConstraintViolation<Item> violation : violations) {
+            System.out.println("violation = " + violation);
+            System.out.println("violation = " + violation.getMessage());
+        }
+
+    }
+  -. 과 같이 어노테이션으로 유효성 검사를 할수 있다. (메시지 내용은 기본적으로 스프링에 저장되어있는 값을 사용한다.)
 
 3. Bean Validation 스프링 적용
+  -. 
+
 4. Bean Validation 에러 코드
 5. Bean Validation 오브젝트 오류
 6. Bean Validation 수정에 적용
