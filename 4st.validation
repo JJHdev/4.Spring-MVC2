@@ -208,14 +208,110 @@ range= {0} ~ {1} 범위를 허용합니다.
 max= {0} 까지 허용합니다.
 
 14. 오류코드와 메시지 처리6
-  -. 
+  -. rejcetValue 같이 개발자가 유효성 검사해서 오류코드를 잡을수 있다.
+  -. Spring에서도 타입미스매치와 같은 오류를 잡아주는 로직도 있다.
+    -. typeMismatch.item.price
+    -. typeMismatch.price
+    -. typeMismatch.java.lang.Integer
+    -. typeMismatch
+    과 같이 자동으로 코드가 입력되어있다.
+
+    -. typeMismatch.java.lang.Integer=숫자를 입력해주세요.
+       typeMismatch=타입 오류입니다. 과 같이 그냥 errors.properties에 넣으면 자동적으로 타입 미스매치 될 경우 표출해준다.
+    -. 아래와 같이 되어있다.
+      #추가
+        typeMismatch.java.lang.Integer=숫자를 입력해주세요.
+        typeMismatch=타입 오류입니다.
+        
+        #Bean Validation 추가
+        
+        #NotBlank.item.itemName=상품 이름을 적어주세요.
+        
+        #NotBlank={0} 공백X
+        Range={0}, {2} ~ {1} 허용
+        Max={0}, 최대 {1}
 
 15. validator 분리1
-  -. 
+  -. 컨트롤러에 validator도 코드가 다 같이 있다보니 너무 복잡하다.
+  -. 아래와 같이 사용할수가 있다. 
+
+    @Component
+    public class ItemValidator implements Validator {
+    
+        @Override
+        public boolean supports(Class<?> clazz) {
+            return Item.class.isAssignableFrom(clazz);
+        }
+    
+        @Override
+        public void validate(Object target, Errors errors) {
+            Item item = (Item) target;
+    
+            if (!StringUtils.hasText(item.getItemName())) {
+                errors.rejectValue("itemName", "required");
+            }
+            if (item.getPrice() == null || item.getPrice() < 1000 || item.getPrice() > 1000000) {
+                errors.rejectValue("price", "range", new Object[]{1000, 10000000}, null);
+            }
+            if (item.getQuantity() == null || item.getQuantity() >= 9999) {
+                errors.rejectValue("quantity", "max", new Object[]{9999}, null);
+            }
+    
+            //특정 필드가 아닌 복합 룰 검증
+            if (item.getPrice() != null && item.getQuantity() != null) {
+                int resultPrice = item.getPrice() * item.getQuantity();
+                if (resultPrice < 10000) {
+                    errors.reject("totalPriceMin", new Object[]{10000, resultPrice}, null);
+                }
+            }
+        }
+    }
+
+  -. 만약에 하나의 클래스에 하나의 검증만 요구되니 클래스를 너무 많이 만들어야 할수도 있다 이럴 경우엔 아래와 같이 Object에 객체타입따라 나눠서 사용이 가능하다.
+
+    @Override
+    public boolean supports(Class<?> clazz) {
+        return Item.class.isAssignableFrom(clazz) || OtherClass.class.isAssignableFrom(clazz);
+    }
+
+    @Override
+    public void validate(Object target, Errors errors) {
+        if (target instanceof Item) {
+            validateItem((Item) target, errors);
+        } else if (target instanceof OtherClass) {
+            validateOtherClass((OtherClass) target, errors);
+        }
+    }
+
+    private void validateItem(Item item, Errors errors) {
+        // Item 검증 로직
+    }
+
+    private void validateOtherClass(OtherClass otherClass, Errors errors) {
+        // OtherClass 검증 로직
+    }
+
 
 16. validator 분리2
-  -. 
+  -. Validator 이것을 사용하기에 뭔가 메리트가 없어보이는데 사용하는 이유가 있다. 
+    @InitBinder
+    public void init(WebDataBinder dataBinder) {
+        dataBinder.addValidators(itemValidator);
+    }
+  -. 위와 같이 넣어주면 컨트롤러에서만 사용이 가능한데 해당 클래스안에 어떤 객체가 소환되든 해당 객체를 초기화해서 사용을 가능하게 해준다.
 
+    @PostMapping("/add")
+    public String addItemV6(@Validated @ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
+        //검증에 실패하면 다시 입력 폼으로
+        if (bindingResult.hasErrors()) {
+            log.info("errors={} ", bindingResult);
+            return "validation/v2/addForm";
+        }
+        return "redirect:/validation/v2/items/{itemId}";
+    }
+  위와 같은식으로 메소드가 호출되자마자 바로 사용이 가능할수 있도록 해준다.
+
+  ->> @InitBinder에 있는 검증기를 @Validated이 어노태이션이 실행하도록 하라 명령을 내려준다.
 
 
 
