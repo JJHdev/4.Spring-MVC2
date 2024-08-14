@@ -1,5 +1,21 @@
 1. Bean Validation 소개
+  -. 검증코드를 매번 작성하는게 번거로워서 만들어진게 Bean Validation 이다. 
+  -. 어노테이션을 이용한 유효성검사
+
 2. Bean Validation 시작
+  -. 	implementation 'org.springframework.boot:spring-boot-starter-validation' 과 같이 설정을 추가해야한다.
+    @NotNull(groups = UpdateCheck.class) //수정 요구사항 추가
+    private Long id;
+    @NotBlank(groups = {SaveCheck.class, UpdateCheck.class})
+    private String itemName;
+    @NotNull(groups = {SaveCheck.class, UpdateCheck.class})
+    @Range(min = 1000, max = 1000000, groups = {SaveCheck.class, UpdateCheck.class})
+    private Integer price;
+    @NotNull(groups = {SaveCheck.class, UpdateCheck.class})
+    @Max(value = 9999, groups = {SaveCheck.class})
+    private Integer quantity;
+  -. 과 같이 어노테이션으로 유효성 검사를 할수 있다.
+
 3. Bean Validation 스프링 적용
 4. Bean Validation 에러 코드
 5. Bean Validation 오브젝트 오류
