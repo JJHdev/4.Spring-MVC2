@@ -127,6 +127,8 @@
   -. 등록과 수정에 다른 유효성검사를 적용할수 없다.
 
 8. Bean Validation group
+  -. 등록과 수정에 다른 유효성검사를 적용할수 
+
 9. Form 전송 객체 분리
 10. Bean Validation - HTTP 메시지 컨버터
 
