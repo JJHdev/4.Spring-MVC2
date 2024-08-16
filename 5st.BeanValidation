@@ -165,11 +165,14 @@
 
     -. @Validated @ModelAttribute("item") ItemSaveForm form, BindingResult bindingResult 
       -. 같이해야 ModelAttribute에서 ItemSaveForm으로 받지 않고 Item으로 받을수 있다.
+
 10. Bean Validation - HTTP 메시지 컨버터
   -. @ModelAttributr는 HTTP요청 파라미터(URL 쿼리 스트링, POST Form)을 다룰때 사용한다.
   -. @RequestBody는 HTTPBody의 데이터를 객체로 변환할때 사용한다 주로 APIJSON의 요청을 다룰때 사용한다.
+  -. @ModelAttribute는 필드 단위로 매핑을 해서 바인딩이 하나가 안되더라도 @valideted가 실행되는데 @RequestBody는 HttpmessageConverter가 실행되어 매핑이 되기때문에
+     바인딩이 하나만 안되더라도 컨트롤러를 실행을 하지 못하기 때문에 @validated가 실행이 안된다.
 
-
+  -. @RequestBody에서 바인딩이 실패되어 컨트롤러가 안되는건 뒤에 예외처리에서 이어서 하겠음.
 
 
 
