@@ -1,0 +1,45 @@
+1. 로그인 요구사항
+  -. 패키지의 구조를 작성할때 
+    -. domain
+      -. item
+        -. item, itemRepository, itemService
+
+    -. web
+      -. item
+        -. ItemSaveForm, ItemUpdateForm, ItemController
+
+
+  > 도메인은 화면, UI, 기술, 인프라 등등의 영역을 제외한 시스템이 구현해야 하는 핵심 비즈니스 업무영역이다.
+  > Web은 domain을 호출하여 사용하지만 domain은 web패키지를 호출하여 사용하면 안된다. domain은 전혀 영향이 없도록 의존관계를 설계해야한다.
+
+2. 회원가입
+  -. 컨트롤러에서는 클라이언트의 입력값 유효성 검사를 진행한다.
+  -. 서비스에서는 서버와의 유효성 검사를 진행한다. (에러코드와 메시지 작성 컨트롤러에서 진행하도록 한다. 
+  -. domain에는 DTO, Repository, Service 와 같이 Web과 의존관계를 갖지 않도록 작성해야한다.
+
+3. 로그인 기능
+  -. 쿠키 삭제시 받아온 쿠키를 사용하는게 아니라 아래와 같이 사용이 가능하다.
+      private void expireCookie(HttpServletResponse response, String cookieName) {
+        Cookie cookie = new Cookie(cookieName, null);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+
+  -. 쿠키만들기 (추가설정 많음)
+        //쿠키에 시간 정보를 주지 않으면 세션 쿠기(브라우저 종료시 모두 종료)
+        Cookie idCookie = new Cookie("memberId", String.valueOf(loginMember.getId()));
+        response.addCookie(idCookie);  
+
+4. 로그인처리하기 - 쿠키사용
+
+5. 쿠키와 보안문제
+
+6. 로그인 처리하기 - 세션동작방식
+
+7. 로그인 처리하기 - 세션 직접 만들기
+
+8. 로그인 처리하기 - 직접 만든 세션 적용
+
+9. 로그인 처리하기 - 서블릿 HTTP 세션 사용하기
+
+10. 세션정보와 타임아웃 설정
