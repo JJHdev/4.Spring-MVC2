@@ -136,16 +136,38 @@
           @NotBlank(groups = {SaveCheck.class, UpdateCheck.class})
           private String itemName;
       -. 인터페이스 SaveCheck , UpdateCheck 를 만든다.
-      -. 실제로 groups를 잘 사용하지 않는데 아래와 같은 방식을 사용한다. 위와 같은 방식은 너무 복잡하고 어렵다.
+      -. 실제로 groups를 잘 사용하지 않는데 아래와 같은 방식을 사용한다. 위와 같은 방식은 너무 복잡하고 어렵고, 객체에 딱맞게 전송받지않기 때문에 어렵다.
 
     -. 저장용Form DTO, 수정용form DTO 따로 만든다.
 
 
 9. Form 전송 객체 분리
-  -. 
+  -. 폼데이터 전달에 도메인 객체 사용
+    -. HTMLForm > Item > Controller > Item > Repository 
 
+  -. 폼데이터 전달을 위한 별도의 객체 사용
+    -. HTMLForm > ItemSaveForm > Controller > Item 생성 > Rrepository
+    -. Itme객체는 테이블에 같게 만들고, ItemSaveForm은 Save시 필요한 필요한 것만 사용한다.
+      @Data
+      public class ItemSaveForm {
+      
+          @NotBlank
+          private String itemName;
+      
+          @NotNull
+          @Range(min = 1000, max = 1000000)
+          private Integer price;
+      
+          @NotNull
+          @Max(value = 9999)
+          private Integer quantity;
+      }
+
+    -. @Validated @ModelAttribute("item") ItemSaveForm form, BindingResult bindingResult 
+      -. 같이해야 ModelAttribute에서 ItemSaveForm으로 받지 않고 Item으로 받을수 있다.
 10. Bean Validation - HTTP 메시지 컨버터
-  -. 
+  -. @ModelAttributr는 HTTP요청 파라미터(URL 쿼리 스트링, POST Form)을 다룰때 사용한다.
+  -. @RequestBody는 HTTPBody의 데이터를 객체로 변환할때 사용한다 주로 APIJSON의 요청을 다룰때 사용한다.
 
 
 
