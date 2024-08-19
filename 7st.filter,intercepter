@@ -68,8 +68,10 @@ public class WebConfig implements WebMvcConfigurer {
   }
     -> httpResponse.sendRedirect("/login?redirectURL=" + requestURI);
        이코드는 로그인 되면 다시 수행했던 페이지로 이동하게 만들도록 하는 코드이다.
+      -. @RequestParam(defaultValue = "/") String redirectURL URL 받
+      -. return "redirect:" + redirectURL; URL 경로 지정해서 새로 로그인해도 이동가능하도록 만들기
 
-    -> 
+  -> 
 
 4. 스프링 인터셉터 - 소개
 
