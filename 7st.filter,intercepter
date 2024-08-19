@@ -1,0 +1,80 @@
+1. 서블릿 필터 - 소개
+  -. 로그인시 모든 컨트롤러에 로그인이 되어있는지 체크하는 코드가 필요해지고 관리하기 힘들어진다. 즉 공통관심사에 대해서 관리하기가 어려워진다.
+  -. 그래서 공통관심사는 서블릿 필터나, 스프링 인터셉터를 사용하는것 좋다.
+
+  -. 서블릿필터는 서블릿이 지원하는 필터링역할을한다. (HTTP 요청 -> WAS -> 필터 -> 서블릿 -> 컨트롤러)
+  -. 필터체인 HTTP요청 -> WAS -> 필터1 -> 필터2 -> 필터3 -> 서블릿 -> 컨트롤러
+  
+2. 서블릿 필터 - 요청로그
+public class LogFilter implements Filter {
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        log.info("log filter init");
+    }
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        log.info("log filter doFilter");
+        try {
+            log.info("REQUEST [{}][{}]", uuid, requestURI);
+            chain.doFilter(request, response);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            log.info("RESPONSE [{}][{}]", uuid, requestURI);
+        }
+    }
+    @Override
+    public void destroy() {
+        log.info("log filter destroy");
+    }
+}
+ -> 내가 만든 필터는 위와 같이 만들수 있는데 이것을 등록해야한다 등록하는 방식은 
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Bean
+    public FilterRegistrationBean logFilter() {
+        FilterRegistrationBean<Filter> filterRegistrationBean = new FilterRegistrationBean<>();
+        filterRegistrationBean.setFilter(new LogFilter());
+        filterRegistrationBean.setOrder(1);
+        filterRegistrationBean.addUrlPatterns("/*");
+
+        return filterRegistrationBean;
+    }
+    위와같이 FilterRegistrationBean에 등록해야한다.
+
+  -. 아래와 같은 코드에서 chain.doFilter은 다음 로직을 이어간다는 뜻이다. > 서블릿 > 컨트롤러 이 다 끝나고 나면 finally로 간다.
+          try {
+            log.info("REQUEST [{}][{}]", uuid, requestURI);
+            chain.doFilter(request, response);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            log.info("RESPONSE [{}][{}]", uuid, requestURI);
+        }
+
+3. 서블릿 필터 - 인증체크
+-.            
+  if (isLoginCheckPath(requestURI)) {
+      log.info("인증 체크 로직 실행 {}", requestURI);
+      HttpSession session = httpRequest.getSession(false);
+      if (session == null || session.getAttribute(SessionConst.LOGIN_MEMBER) == null) {
+
+          log.info("미인증 사용자 요청 {}", requestURI);
+          //로그인으로 redirect
+          httpResponse.sendRedirect("/login?redirectURL=" + requestURI);
+          return;
+      }
+  }
+    -> httpResponse.sendRedirect("/login?redirectURL=" + requestURI);
+       이코드는 로그인 되면 다시 수행했던 페이지로 이동하게 만들도록 하는 코드이다.
+
+    -> 
+
+4. 스프링 인터셉터 - 소개
+
+5. 스프링 인터셉터 - 요청 로그
+
+6. 스프링 인터셉터 - 인증 체크
+
+7. ArgumentResolver 활용
