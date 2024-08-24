@@ -1,0 +1,13 @@
+1. 스프링부트 기본 오류처리
+
+2. Handler ExceptionReslver 시작
+
+3. Handler ExceptionReslver 활용
+
+4. 스프링이 제공하는 ExceptionResolver1
+
+5. 스프링이 제공하는 ExceptionReslver2
+
+6. @ExceptionHandelr
+
+7. @ControllerAdvice
