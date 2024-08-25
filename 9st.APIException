@@ -81,6 +81,40 @@ response.getWriter().println("hello"); 처럼 HTTP 응답 바디에 직접 데�
 
 3. Handler ExceptionReslver 활용
 
+public class UserHandlerExceptionResolver implements HandlerExceptionResolver {
+ private final ObjectMapper objectMapper = new ObjectMapper();
+ @Override
+ public ModelAndView resolveException(HttpServletRequest request, 
+HttpServletResponse response, Object handler, Exception ex) {
+ try {
+ if (ex instanceof UserException) {
+ log.info("UserException resolver to 400");
+ String acceptHeader = request.getHeader("accept");
+ response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+ if ("application/json".equals(acceptHeader)) {
+ Map<String, Object> errorResult = new HashMap<>();
+ errorResult.put("ex", ex.getClass());
+ errorResult.put("message", ex.getMessage());
+ String result =
+objectMapper.writeValueAsString(errorResult);
+ response.setContentType("application/json");
+ response.setCharacterEncoding("utf-8");
+ response.getWriter().write(result);
+ return new ModelAndView();
+ } else {
+ //TEXT/HTML
+ return new ModelAndView("error/400");
+ }
+ }
+ } catch (IOException e) {
+ log.error("resolver ex", e);
+ }
+ return null;
+ }
+}
+  -> modelAndView에서 return에서 new ModelAndView() 를 반환하면 API에러이고, new ModelAndView(error/500); 을 반환하면 HTML 에러다.
+  -. ExceptionResolver에서는 컨트롤러에서 온 예외를 해결가능한지 디스패처서블릿에서 물어보고 해결되는것이다.
+  -. +                                                                                                                                               
 
 4. 스프링이 제공하는 ExceptionResolver1
  
