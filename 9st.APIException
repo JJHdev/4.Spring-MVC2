@@ -1,10 +1,89 @@
 1. 스프링부트 기본 오류처리
+  -.    @RequestMapping(value = "/error-page/500", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> errorPage500Api(
+            HttpServletRequest request, HttpServletResponse response) {
+
+        log.info("API errorPage 500");
+
+        Map<String, Object> result = new HashMap<>();
+        Exception ex = (Exception) request.getAttribute(ERROR_EXCEPTION);
+        result.put("status", request.getAttribute(ERROR_STATUS_CODE));
+        result.put("message", ex.getMessage());
+
+        Integer statusCode = (Integer) request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+        return new ResponseEntity<>(result, HttpStatus.valueOf(statusCode));
+    }
+ 와같이 api요청시 다른 경로로 에러를 처리할수있다.
+  -. produces = MediaType.APPLICATION_JSON_VALUE 이게 있어서 같은 url로 같은 요청을 받을수 있더라도 우선순위에 있어 해당 컨트롤러가 호출된다.
+  -. API 요청시 API전용 에러를 받도록 만들수 있다.
 
 2. Handler ExceptionReslver 시작
+  -. basicErrorController를 사용하면 자동적으로 HTML, api 전용 페이지가 설정된다.
+  -. 디폴트경로인 error폴더에 만들어서 사용할경우 (사용됨) , 아니면 직접 basicErrorCotroller에서 (url확인하고 수정할수 있다.)0
+
+@RequestMapping(produces = MediaType.TEXT_HTML_VALUE)
+public ModelAndView errorHtml(HttpServletRequest request, HttpServletResponse
+response) {}
+@RequestMapping
+public ResponseEntity<Map<String, Object>> error(HttpServletRequest request) {}
+위와 같이 설정되어있어서 사용가능하다.
+
+  -. HTML오류에서는 basic에러를 많이 이용하고, aPI에러는 @ExceptionHandler 를이용한다.
+
+  -. 스프링은 예외를 컨트롤러 밖으로 던지고, 동작방식을 변경할려면 ExceptionReslver을 이용해야한다.
+  -. ExceptionReslver은 예외가 디스페쳐서블릿으로 올라가면 ExceptionReslver으로 간다.
+
+ @Override
+   public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+       try {
+           if (ex instanceof IllegalArgumentException) {
+               log.info("IllegalArgumentException resolver to 400");
+               response.sendError(HttpServletResponse.SC_BAD_REQUEST, 
+              ex.getMessage());
+               return new ModelAndView();
+           }
+       } catch (IOException e) {
+           log.error("resolver ex", e);
+       }
+       return null;
+   }
+  -. 와 같이 하면 예외가 터질경우 해당 내용응 response에 적용되고 return new ModelAndView();를 반환하여 WAS까지 예외문제없이 갈수있다.
+  -. 그리하여 디스패처서블릿에서 ExceptionResolver에서 모델엔뷰를 정상반환하여 정삭적으로 가고 , WAS에서 respones에서 sendError를 찾아서 사용한다.
+  -. 사용하기 위해서는 아래와 같이 코드를 등록해야한다.
+    @Override
+    public void extendHandlerExceptionResolvers(List<HandlerExceptionResolver> resolvers) {
+        resolvers.add(new MyHandlerExceptionResolver());
+        resolvers.add(new UserHandlerExceptionResolver());
+    }
+
+  -. 만약에 modelAndView를 넣으면 view를 렌더링하니 원하는 방식으로 사용가능하다.
+  -. 그리고 마지막에 return에 null이 Was까지 다시 반환되어 Was에서는 500Error이 반환된다.
+
+반환 값에 따른 동작 방식
+HandlerExceptionResolver 의 반환 값에 따른 DispatcherServlet 의 동작 방식은 다음과 같다.빈 ModelAndView: new ModelAndView() 처럼 빈 ModelAndView 를 반환하면 뷰를 렌더링 하지 않고, 정상 흐름으로 서블릿이 리턴된다.
+ModelAndView 지정: ModelAndView 에 View , Model 등의 정보를 지정해서 반환하면 뷰를 렌더링 한다.
+
+null: null 을 반환하면, 다음 ExceptionResolver 를 찾아서 실행한다. 만약 처리할 수 있는
+ExceptionResolver 가 없으면 예외 처리가 안되고, 기존에 발생한 예외를 서블릿 밖으로 던진다.
+
+ExceptionResolver 활용
+예외 상태 코드 변환
+예외를 response.sendError(xxx) 호출로 변경해서 서블릿에서 상태 코드에 따른 오류를 처리하도록 위임
+이후 WAS는 서블릿 오류 페이지를 찾아서 내부 호출, 예를 들어서 스프링 부트가 기본으로 설정한 /error 가 호출됨
+
+뷰 템플릿 처리
+ModelAndView 에 값을 채워서 예외에 따른 새로운 오류 화면 뷰 렌더링 해서 고객에게 제공
+API 응답 처리
+response.getWriter().println("hello"); 처럼 HTTP 응답 바디에 직접 데이터를 넣어주는것도 가능하다. 여기에 JSON 으로 응답하면 API 응답 처리를 할 수 있다.
+
+  -. Exception이 올경우 resolver를 하는데 APi, html등 모든 에러를 처리할수 있는 방식이다.
+  -. extendHandlerExceptionResolvers(을 사용할것)
 
 3. Handler ExceptionReslver 활용
 
+
 4. 스프링이 제공하는 ExceptionResolver1
+ 
 
 5. 스프링이 제공하는 ExceptionReslver2
 
