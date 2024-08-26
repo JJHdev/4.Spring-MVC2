@@ -63,5 +63,32 @@ public class IpPortToStringConverter implements Converter<IpPort, String> {
   -. 실제로 @ReqeustParam같은 스프링에서 타입컨버터를 많이용한다.
   -. 스프링에서는 사용하는쪽과 (conveterService), 등록하는 인터페이스(conveterRegistry) 서로 ISP인터페이스 분리원칙을 이용해서 많이 설계되어있다.
 
+4. SpringConverter
+  -. webMvcConfigurer에서 overide에서 addFomatter가 있다 이를 이용해서 내가 만든 컨버터를 등록할수있다.
+  -. spring에서 converisonService를 등록하기위해 만들어준것.
+   
+@Override
+    public void addFormatters(FormatterRegistry registry) {
+        //주석처리 우선순위
+//        registry.addConverter(new StringToIntegerConverter());
+//        registry.addConverter(new IntegerToStringConverter());
+        registry.addConverter(new StringToIpPortConverter());
+        registry.addConverter(new IpPortToStringConverter());
 
-    
+        //추가
+        registry.addFormatter(new MyNumberFormatter());
+    }
+  -. 해당 컨버터들은 컨트롤러에서 파라미터를 받을때 사용할수있다.
+  -. 기존에 만든 StrintoInteger를 수행시 잘되었는데, 내가 만든것을 넣으면 내가 만든것들을 이용하게된다.
+  -. (추가컨버터가 기존 컨버터보다 더 우선순위를 가지게 된것)
+
+  사용예시
+    @GetMapping("/ip-port")
+    public String ipPort(@RequestParam IpPort ipPort) {
+        System.out.println("ipPort IP = " + ipPort.getIp());
+        System.out.println("ipPort PORT = " + ipPort.getPort());
+        return "ok";
+    }
+
+  -. @ReqeustParam, @ModelAttribute, @PathValuable 등 다 적용이 된다.
+  -. 실제로 @ReqeustParam 이것을 사용할때도 converseionService를 이용한다.
