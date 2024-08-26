@@ -140,11 +140,42 @@ ResponseStatusException 예외
 하나씩 확인해보자
 
 
-
-
- + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + 
 5. 스프링이 제공하는 ExceptionReslver2
+  -. 스프링이 제공하는 예외(자동으로 적용)
 
 6. @ExceptionHandelr
+  -. 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ErrorResult illegalExHandler(IllegalArgumentException e) {
+        log.error("[exceptionHandler] ex", e);
+        return new ErrorResult("BAD", e.getMessage());
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResult> userExHandler(UserException e) {
+        log.error("[exceptionHandler] ex", e);
+        ErrorResult errorResult = new ErrorResult("USER-EX", e.getMessage());
+        return new ResponseEntity(errorResult, HttpStatus.BAD_REQUEST);
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler
+    public ErrorResult exHandler(Exception e) {
+        log.error("[exceptionHandler] ex", e);
+        return new ErrorResult("EX", "내부 오류");
+    }
+  -. 와 같이 해당 exception을 이용할수 있다.
+  -. (api 예외처리방법)
+  -. 해당 컨트롤러에서 발생한 예외를 처리하는 방법을 명시해놓는것이다. (해당컨트롤러에서만 사용가능) 해당 컨트롤러에서 해당 예외가 발생되면 해당 메소드가 실행된다.
+  -. retrun타입이 String일경우 view리졸버를 이용할수 있다.
+  -. 해당 기능은 mvc에서 사용하기보다 api에서 많이 사용된다.
 
 7. @ControllerAdvice
+  -. 6번의 기능을 따로 빼서 공통기능으로 만들수있다.
+  -. @RestControllerAdvice(basePackages = "hello.exception.api")
+public class ExControllerAdvice {}
+ 와같이 하면 지정된 범위의 컨트롤러에 해당 Exception을 적용할수있다.
+  -. 만약에 범위를 지정하지않으면, 모든 컨트롤러에 지정된다.
+  -. annotation으로 지정시 해당 어노테이션을 가진 클래스만 처리된다.
+  -. 해당범위에 @ExceptionHandelr, @InitBinder기능을 부여한다.
