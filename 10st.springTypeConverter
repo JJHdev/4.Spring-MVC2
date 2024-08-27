@@ -92,3 +92,99 @@ public class IpPortToStringConverter implements Converter<IpPort, String> {
 
   -. @ReqeustParam, @ModelAttribute, @PathValuable 등 다 적용이 된다.
   -. 실제로 @ReqeustParam 이것을 사용할때도 converseionService를 이용한다.
+
+
+5. 뷰템플릿에 컨버전 서비스 적용하기.
+  -.<li>${number}: <span th:text="${number}" ></span></li>
+    <li>${{number}}: <span th:text="${{number}}" ></span></li>
+    <li>${ipPort}: <span th:text="${ipPort}" ></span></li>
+    <li>${{ipPort}}: <span th:text="${{ipPort}}" ></span></li>
+  -. 위와 같이 ${{}} 두개를 사용할경우 스프링에서 자동으로 적용할수있는 컨버터를 사용한다.
+  
+  -. th:field <input type="text" th:field="*{ipPort}"><br/>
+    th:value <input type="text" th:value="*{ipPort}">(보여주기 용도)<br/>
+  -. 위와같이 field에 *{}를 사용해도 컨버터가 실행되는것을 확인할수있다. th:value는 안됨
+
+6. 포맷터
+  -. Converter는 입력과 출력타입에 제한이 없는, 범용타입변환기능을 제공한다.
+  -. 숫자 1000을 1,000문자로 변환해서 넣는다던지, 날짜객체를 특정 포맷으로 한다던지, Locale등 현지화 정보를 사용할 경우 포맷터를 이용할수 있다.
+  -. Formatter 는 문자에 특화되어있음 (객체 <-> 문자)
+
+  -. 
+@Slf4j
+public class MyNumberFormatter implements Formatter<Number> {
+    @Override
+    public Number parse(String text, Locale locale) throws ParseException {
+        log.info("text={}, locale={}", text, locale);
+        //"1,000" -> 1000
+        NumberFormat format = NumberFormat.getInstance(locale);
+        return format.parse(text);
+    }
+    @Override
+    public String print(Number object, Locale locale) {
+        log.info("object={}, locale={}", object, locale);
+        return NumberFormat.getInstance(locale).format(object);
+    }
+}
+
+  -. parse은 "1,000" -> 1000으로 print는 반대로 출력하게 해준다.
+  -. locale정보를 활용해서 나라마다 다른 숫자 퐷을 만들어준다.
+    MyNumberFormatter formatter = new MyNumberFormatter();
+
+    @Test
+    void parse() throws ParseException {
+        Number result = formatter.parse("1,000", Locale.KOREA);
+        assertThat(result).isEqualTo(1000L); //Long 타입 주의
+    }
+
+    @Test
+    void print() {
+        String result = formatter.print(1000, Locale.KOREA);
+        assertThat(result).isEqualTo("1,000");
+    }
+ 로 사용할수 있다.
+
+7. 포맷터를 지원하는 컨버전 서비스
+  -. 컨버전 서비스에 포맷터를 추가하는 방법이 있는데, 이는 FormattingConversionService를 이용해야한다. (포맷터를 지원하는 컨버전 서비스)
+  -. defaultFormattingConversionService를 이용해서 사용할수있다. 
+  -. 해당 클래스는 포맷터와 컨버전을 둘다 등록할수있다.
+
+    @Test
+    void formattingConversionService() {
+        DefaultFormattingConversionService conversionService = new DefaultFormattingConversionService();
+        //컨버터 등록
+        conversionService.addConverter(new StringToIpPortConverter());
+        conversionService.addConverter(new IpPortToStringConverter());
+        //포멧터 등록
+        conversionService.addFormatter(new MyNumberFormatter());
+
+        //컨버터 사용
+        IpPort ipPort = conversionService.convert("127.0.0.1:8080", IpPort.class);
+        assertThat(ipPort).isEqualTo(new IpPort("127.0.0.1", 8080));
+        //포멧터 사용
+        assertThat(conversionService.convert(1000, String.class)).isEqualTo("1,000");
+        assertThat(conversionService.convert("1,000", Long.class)).isEqualTo(1000L);
+
+    }
+   과 같이 둘다 등록해서 사용할수 있다.
+
+8. 포맷터 적용하기
+  -. @Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        //주석처리 우선순위
+//        registry.addConverter(new StringToIntegerConverter());
+//        registry.addConverter(new IntegerToStringConverter());
+        registry.addConverter(new StringToIpPortConverter());
+        registry.addConverter(new IpPortToStringConverter());
+
+        //추가
+        registry.addFormatter(new MyNumberFormatter());
+    }
+}
+에서 상단 두개를 주석처리하는 이유는 MyNumberFormatter에서 숫자와 문자를 바꿔주는것과 같기때문에 우선순위적용으로 인해 바꿔주는
+
+
+9. 
