@@ -186,5 +186,19 @@ public class WebConfig implements WebMvcConfigurer {
 }
 에서 상단 두개를 주석처리하는 이유는 MyNumberFormatter에서 숫자와 문자를 바꿔주는것과 같기때문에 우선순위적용으로 인해 바꿔주는
 
+9. 스프링이 제공하는 기본 포맷터
+    @Data
+    static class Form {
+        @NumberFormat(pattern = "###,###")
+        private Integer number;
 
-9. 
+        @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+        private LocalDateTime localDateTime;
+    }
+  -. 과 같이 어노테이션으로 내가 원하는 형식으로 지정해서 받을수 있다.
+  -. @NumberFormat(pattern = "###,###") 으로 하면 객체를 넘길경우 출력할때 컨버터 적용문법 사용시 자동으로 해당 패턴으로 적용되어 표출된다.
+    @PostMapping("/formatter/edit")
+    public String formatterEdit(@ModelAttribute Form form) {
+        return "formatter-view";
+    }
+    와 같이 할 경우 @ModelAttribute를 사용할경우 받은것을 자동으로 model.addattribute가 적용되어 전달된다.
