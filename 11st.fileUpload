@@ -1,0 +1,18 @@
+1. 파일 업로드
+  -. 파일을 업로드 할려면 파일은 문자가 아니라 바이너리 데이터를 전송해야한다.  multipart/form-data  는 바이너리 데이터로 전송할수있도록 해주는것이다.
+  -. 이럴때 이름과 나이, 파일까지 전송해야 할때 두가지 데이터 타입을 전송해야하는데 multipart/form-data 는 두가지 데이터 타입을 전송하게 해준다. (input에서 file타입일 경우 바이너리 데이터로 전송)
+  
+  -. application/x-www-form-urlencoded
+    -> HTML Form 데이터 전송 (input에서 지정한 name을 키값으로 value를 값으로 보낸다. 
+    
+  -. multipart/form-data 
+
+2. 서블릿과 파일업로드1
+  -.    String itemName = request.getParameter("itemName");
+        log.info("itemName={}", itemName);
+        Collection<Part> parts = request.getParts();
+        log.info("parts={}", parts);
+  -.  같이 할경우 reqeust.getPart에서 파일과 데이터 객체가 담겨서 오는것을 확인할수 있다. (멀티파트 데이터를 읽어온다.)
+  -. mutipart에는 몇가지 기능이 있는데 (업로드사이즈 제한할수있다.)
+
+3. 서블릿과 파일업로드2
