@@ -151,10 +151,45 @@ public class FileStore {
 
 }
 
+  -. 이미지 파일을 불러오기 위해
+    -. html
+      <img th:each="imageFile : ${item.imageFiles}" th:src="|/images/${imageFile.getStoreFileName()}|" width="300" height="300"/>
+   
+    -. controller
+      @ResponseBody
+      @GetMapping("/images/{filename}")
+      public Resource downloadImage(@PathVariable String filename) throws MalformedURLException {
+          return new UrlResource("file:" + fileStore.getFullPath(filename));
+      }
+    -> 만약에 img태그에서 src속성중 경로가 컨트롤러에 있을 경우 컨트롤러에서 해당 이미지를 불러오고 없을 경우 정적 리소스에서 찾는다.
+    -> 컨트롤러로 갔을 경우 file:로 하면 외부에서 찾게 하고, classpath: 로 할경우 프로젝트 내부에서 찾게 한다.
 
-  -. 
+  -. 파일 다운로드
+    -. html
+      첨부파일: <a th:if="${item.attachFile}" th:href="|/attach/${item.id}|" th:text="${item.getAttachFile().getUploadFileName()}" /><br/>
 
-
+    -. controller
+      @GetMapping("/attach/{itemId}")
+      public ResponseEntity<Resource> downloadAttach(@PathVariable Long itemId) throws MalformedURLException {
+          Item item = itemRepository.findById(itemId);
+          String storeFileName = item.getAttachFile().getStoreFileName();
+          String uploadFileName = item.getAttachFile().getUploadFileName();
+  
+          UrlResource resource = new UrlResource("file:" + fileStore.getFullPath(storeFileName));
+  
+          log.info("uploadFileName={}", uploadFileName);
+  
+          String encodedUploadFileName = UriUtils.encode(uploadFileName, StandardCharsets.UTF_8);
+          String contentDisposition = "attachment; filename=\"" + encodedUploadFileName + "\"";
+  
+          return ResponseEntity.ok()
+                  .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+                  .body(resource);
+      }
+    -> header에 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition) 가 없을 경우 파일 다운로드시 안에 내용만 브라우저에 표출된다. 그래서 @ResponseBody를 사용안한것 (header를 셋팅하기위해)
+    -> response에 content-Disposition: attachment; filename="b.txt" 로 넘어가면 브라우저에 다운로드를 하라 (attachment) 파일이름은 (filename) 으로 지정하게 해준다.
+    -> content-Disposition에는 inline을 넣을수 있는데 이것은 브라우저에 이미지 표출 명령이다. (image , pdf)
+    -> 한글 파일명은 깨질수 있어서 String encodedUploadFileName = UriUtils.encode(uploadFileName, StandardCharsets.UTF_8); 으로 인코딩 다시한번 지정해준다.(서버설정은 각 환경마다 다르므로)
 
 
 
