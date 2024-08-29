@@ -16,3 +16,145 @@
   -. mutipart에는 몇가지 기능이 있는데 (업로드사이즈 제한할수있다.)
 
 3. 서블릿과 파일업로드2
+  -. file.dir=/Users/kimyounghan/study/file/ (app.properties)에 입력 파일 경로 (마지막에 /가 있어야 한다.)
+  -. java에서는 
+    @Value("${file.dir}")
+    private String fileDir; 으로 가져올수있다.
+
+
+파일 저장방법은아래와 같다
+    Collection<Part> parts = request.getParts();
+    log.info("parts={}", parts);
+    
+    for (Part part : parts) {
+        log.info("==== PART ====");
+        log.info("name={}", part.getName());
+        Collection<String> headerNames = part.getHeaderNames();
+        for (String headerName : headerNames) {
+            log.info("header {}: {}", headerName, part.getHeader(headerName));
+        }
+        //편의 메서드
+        //content-disposition; filename
+        log.info("submittedFilename={}", part.getSubmittedFileName());
+        log.info("size={}", part.getSize()); //part body size
+    
+        //데이터 읽기
+        InputStream inputStream = part.getInputStream();
+        String body = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
+        log.info("body={}", body);
+    
+        //파일에 저장하기
+        if (StringUtils.hasText(part.getSubmittedFileName())) {
+            String fullPath = fileDir + part.getSubmittedFileName();
+            log.info("파일 저장 fullPath={}", fullPath);
+            part.write(fullPath);
+        }
+    }
+
+
+4. 스프링 파일 업로드
+@PostMapping("/upload")
+    public String saveFile(@RequestParam String itemName,
+                           @RequestParam MultipartFile file, HttpServletRequest request) throws IOException {
+
+        log.info("request={}", request);
+        log.info("itemName={}", itemName);
+        log.info("multipartFile={}", file);
+
+        if (!file.isEmpty()) {
+            String fullPath = fileDir + file.getOriginalFilename();
+            log.info("파일 저장 fullPath={}", fullPath);
+            file.transferTo(new File(fullPath));
+        }
+
+        return "upload-form";
+    }
+위와 같이 어노테이션으로 file을 받아서 사용할수 있다.
+
+5. 파일 업로드. 파일 다운로드
+  -. 파일을 받는 DTO를 만들것
+@Data
+public class ItemForm {
+
+    private Long itemId;
+    private String itemName;
+    private MultipartFile attachFile;
+    private List<MultipartFile> imageFiles;
+}
+
+@Data
+public class Item {
+
+    private Long id;
+    private String itemName;
+    private UploadFile attachFile;
+    private List<UploadFile> imageFiles;
+}
+
+  -. 이미지는 여러개 받을것이라서, List로 했음, Item은 파일 저장시 사용할 DTO임 (UploadFile은 파일의 저장이름과 실제 이름으로 선언되어있음)
+  파일 관련 컴포넌트 설정은 아래와 같이 설정해서 사용하기 편하도록 작업함
+package hello.upload.file;
+
+import hello.upload.domain.UploadFile;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Component
+public class FileStore {
+
+    @Value("${file.dir}")
+    private String fileDir;
+
+    public String getFullPath(String filename) {
+        return fileDir + filename;
+    }
+
+    public List<UploadFile> storeFiles(List<MultipartFile> multipartFiles) throws IOException {
+        List<UploadFile> storeFileResult = new ArrayList<>();
+        for (MultipartFile multipartFile : multipartFiles) {
+            if (!multipartFile.isEmpty()) {
+                storeFileResult.add(storeFile(multipartFile));
+            }
+        }
+        return storeFileResult;
+    }
+
+    public UploadFile storeFile(MultipartFile multipartFile) throws IOException {
+        if (multipartFile.isEmpty()) {
+            return null;
+        }
+
+        String originalFilename = multipartFile.getOriginalFilename();
+        String storeFileName = createStoreFileName(originalFilename);
+        multipartFile.transferTo(new File(getFullPath(storeFileName)));
+        return new UploadFile(originalFilename, storeFileName);
+    }
+
+    private String createStoreFileName(String originalFilename) {
+        String ext = extractExt(originalFilename);
+        String uuid = UUID.randomUUID().toString();
+        return uuid + "." + ext;
+    }
+
+    private String extractExt(String originalFilename) {
+        int pos = originalFilename.lastIndexOf(".");
+        return originalFilename.substring(pos + 1);
+    }
+
+
+}
+
+
+  -. 
+
+
+
+
+
